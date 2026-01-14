@@ -12,7 +12,7 @@ api_key = st.sidebar.text_input("Google API Key:", type="password")
 
 # --- 3. SYSTEM PROMPT (HIER IST DAS UPDATE) ---
 SYSTEM_PROMPT = """
-Du bist ein Experte für den UPS-Prozess (Uniform Problem Solving) bei Mercedes-Benz.
+Du bist ein Experte für den UPS-Prozess (Uniform Problem Solving).
 Du befindest dich in Schritt 5: "Standardize & Reapply".
 
 Deine Aufgabe:
@@ -99,3 +99,4 @@ if api_key:
         st.info("Tipp: API Key prüfen oder Internetverbindung checken.")
 else:
     st.info("⬅️ Bitte gib links deinen API Key ein.")
+
