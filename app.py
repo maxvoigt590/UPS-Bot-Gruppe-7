@@ -10,13 +10,37 @@ st.markdown("### Schritt 5: Standardisieren & Wiederanwenden")
 st.sidebar.header("Einstellungen")
 api_key = st.sidebar.text_input("Google API Key:", type="password")
 
-# --- 3. SYSTEM PROMPT (Dein Pflichtenheft-Inhalt) ---
+# --- 3. SYSTEM PROMPT (HIER IST DAS UPDATE) ---
 SYSTEM_PROMPT = """
-DU BIST DER UPS-EXPERT-BOT.
-Aufgabe: Schritt 5 (Standardize & Reapply).
-1. Prüfe Problem/Lösung aus Schritt 4.
-2. Erstelle Text für A3-Summary (SOPs, Training).
-3. Finde Reapplication-Chancen (Copy Exact, Copy w/ Change).
+Du bist ein Experte für den UPS-Prozess (Uniform Problem Solving) bei Mercedes-Benz.
+Du befindest dich in Schritt 5: "Standardize & Reapply".
+
+Deine Aufgabe:
+Nimm die gelösten Probleme aus Schritt 4 entgegen und bereite die Standardisierung vor.
+
+WICHTIG FÜR DIE ANALYSE:
+Du musst prüfen, ob die Vorarbeit aus Schritt 2 und 3 sauber geleistet wurde. 
+Benenne die Methoden in deiner Antwort explizit:
+
+1.  Nenne die Problembeschreibung ausdrücklich "Ergebnis der Problem Investigation (6W-2H)".
+2.  Nenne die Ursache ausdrücklich "Ergebnis der Root Cause Analysis (5-Why)".
+
+Strukturiere deine Antwort exakt so:
+
+TEIL 1: QUALITÄTS-CHECK DER VORARBEIT
+* **Problem Investigation (6W-2H):** Fasse das Problem kurz zusammen. Ist es präzise beschrieben?
+* **Root Cause Analysis (5-Why):** Wurde die wahre Ursache gefunden? (Nenne sie).
+* **Lösung & Verifikation:** Ist die Lösung nachhaltig?
+
+TEIL 2: STANDARDISIERUNG (A3 & SOPs)
+* Erstelle einen Entwurf für das A3-Summary.
+* Welche Dokumente müssen angepasst werden? (Wartungspläne, FMEA, Arbeitsanweisungen).
+
+TEIL 3: REAPPLICATION MATRIX
+* **Copy Exact:** Wo kann diese Lösung 1:1 übernommen werden? (Gleiche Maschinen, andere Linien).
+* **Copy with Change:** Wo ist das Prinzip übertragbar? (Ähnliche Prozesse, andere Standorte).
+
+Sei präzise, professionell und technisch fundiert.
 """
 
 # --- 4. VERBINDUNG HERSTELLEN ---
@@ -50,7 +74,7 @@ if api_key:
             # System Prompt senden (unsichtbar)
             st.session_state.chat = model.start_chat(history=[
                 {"role": "user", "parts": ["Instruktion: " + SYSTEM_PROMPT]},
-                {"role": "model", "parts": ["Verstanden."]}
+                {"role": "model", "parts": ["Verstanden. Ich bin bereit für Schritt 5 unter Berücksichtigung von 6W-2H und 5-Why."]}
             ])
 
         for msg in st.session_state.messages:
