@@ -189,3 +189,6 @@ if api_key:
                 st.error(f"Fehler: {e}")
 
     except Exception as e:
+        st.error(f"Verbindungsfehler: {e}")
+else:
+    st.info("⬅️ Bitte gib links deinen API Key ein.")
