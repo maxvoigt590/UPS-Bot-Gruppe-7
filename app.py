@@ -13,7 +13,7 @@ st.markdown("Lade einen Problemlösungs-Report (PDF) hoch oder beschreibe das Pr
 st.sidebar.header("Einstellungen")
 api_key = st.sidebar.text_input("Google API Key:", type="password")
 
-# --- 3. FUNKTIONEN (SMART PDF ERSTELLEN - A3 VERSION) ---
+# --- 3. FUNKTIONEN (SMART PDF ERSTELLEN - CLEAN VERSION) ---
 def create_pdf(text):
     pdf = FPDF()
     pdf.add_page()
@@ -40,8 +40,7 @@ def create_pdf(text):
         clean_line = line.replace("**", "").replace("##", "")
         clean_line = clean_line.encode('latin-1', 'replace').decode('latin-1')
         
-        # LOGIK: Erkenne die 5 A3-Phasen anhand der Nummerierung (1. , 2. , etc.)
-        # Wir prüfen, ob die Zeile mit einer Zahl und Punkt beginnt (z.B. "1. Understand")
+        # LOGIK: Erkenne die 5 A3-Phasen anhand der Nummerierung
         if clean_line.strip().startswith(("1. ", "2. ", "3. ", "4. ", "5. ")):
             # ---> ÜBERSCHRIFT (Grauer Balken)
             pdf.ln(5)
@@ -65,11 +64,8 @@ def create_pdf(text):
                 pdf.set_font("Arial", '', 11)
                 pdf.multi_cell(0, 6, txt=clean_line)
 
-    # Footer
-    pdf.set_y(-15)
-    pdf.set_font("Arial", 'I', 8)
-    pdf.set_text_color(128, 128, 128)
-    pdf.cell(0, 10, 'Generiert durch Google Gemini & Streamlit | Gruppe 7', 0, 0, 'C')
+    # HIER WURDE DER FOOTER GELÖSCHT
+    # Keine "Generiert durch..." Zeile mehr -> Keine extra Seite!
     
     return pdf.output(dest='S').encode('latin-1')
 
@@ -192,3 +188,4 @@ if api_key:
         st.error(f"Verbindungsfehler: {e}")
 else:
     st.info("⬅️ Bitte gib links deinen API Key ein.")
+
