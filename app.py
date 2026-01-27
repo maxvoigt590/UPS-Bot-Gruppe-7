@@ -13,59 +13,52 @@ st.markdown("Lade einen Problemlösungs-Report (PDF) hoch oder beschreibe das Pr
 st.sidebar.header("Einstellungen")
 api_key = st.sidebar.text_input("Google API Key:", type="password")
 
-# --- 3. FUNKTIONEN (SMART PDF ERSTELLEN) ---
+# --- 3. FUNKTIONEN (SMART PDF ERSTELLEN - A3 VERSION) ---
 def create_pdf(text):
     pdf = FPDF()
     pdf.add_page()
     
-    # 1. Haupt-Überschrift (Header des Dokuments)
+    # Header
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "UPS Expert Bot - Report (Schritt 5)", ln=True, align='C')
+    pdf.cell(0, 10, "A3 Summary Sheet - Documentation", ln=True, align='C')
     
-    # Untertitel / Disclaimer
+    # Untertitel
     pdf.set_font("Arial", 'I', 10)
     pdf.set_text_color(100, 100, 100) # Grau
-    pdf.cell(0, 8, "Automatisch generierter Entwurf für A3-Summary & SOPs", ln=True, align='C')
+    pdf.cell(0, 8, "Automatisch generierter Entwurf für Schritt 5", ln=True, align='C')
     
     # Trennlinie
     pdf.set_draw_color(0, 0, 0) # Schwarz
     pdf.line(10, 30, 200, 30)
-    pdf.ln(10) # Abstand nach unten
+    pdf.ln(10)
     
-    # 2. Text intelligent verarbeiten
-    pdf.set_text_color(0, 0, 0) # Zurück zu Schwarz
-    
-    # Wir teilen den Text in einzelne Zeilen auf
+    # Text verarbeitung
+    pdf.set_text_color(0, 0, 0)
     lines = text.split('\n')
     
     for line in lines:
-        # Bereinigung: Markdown-Sternchen entfernen
         clean_line = line.replace("**", "").replace("##", "")
-        
-        # Encoding Fix für Umlaute (Wichtig!)
         clean_line = clean_line.encode('latin-1', 'replace').decode('latin-1')
         
-        # CHECK: Ist das eine Überschrift? (Erkennt "TEIL 1", "TEIL 2" oder Zeilen mit Doppelpunkt am Ende)
-        if "TEIL" in clean_line and ":" in clean_line:
-            # ---> ÜBERSCHRIFT-FORMATIERUNG
-            pdf.ln(5) # Etwas Abstand vor neuer Sektion
-            pdf.set_font("Arial", 'B', 12) # Fett, Größe 12
-            pdf.set_fill_color(230, 230, 230) # Hellgrauer Hintergrund
-            # (Breite 0 = ganze Zeile, Höhe 8, Text, Rahmen 0, Zeilenumbruch 1, Ausrichtung L, Füllen True)
+        # LOGIK: Erkenne die 5 A3-Phasen anhand der Nummerierung (1. , 2. , etc.)
+        # Wir prüfen, ob die Zeile mit einer Zahl und Punkt beginnt (z.B. "1. Understand")
+        if clean_line.strip().startswith(("1. ", "2. ", "3. ", "4. ", "5. ")):
+            # ---> ÜBERSCHRIFT (Grauer Balken)
+            pdf.ln(5)
+            pdf.set_font("Arial", 'B', 12)
+            pdf.set_fill_color(230, 230, 230) # Hellgrau
             pdf.cell(0, 8, txt=clean_line, ln=True, align='L', fill=True)
-            pdf.set_font("Arial", '', 11) # Zurücksetzen für nächsten Text
-            
-        # CHECK: Ist es ein wichtiger Unterpunkt? (Startet mit "- " oder "* ")
-        elif clean_line.strip().startswith("-") or clean_line.strip().startswith("*"):
-            # ---> LISTEN-FORMATIERUNG
             pdf.set_font("Arial", '', 11)
-            pdf.set_x(15) # Einrückung nach rechts
+            
+        # Listenpunkte
+        elif clean_line.strip().startswith("-") or clean_line.strip().startswith("*"):
+            pdf.set_font("Arial", '', 11)
+            pdf.set_x(15) 
             pdf.multi_cell(0, 6, txt=clean_line)
-            pdf.set_x(10) # Zurücksetzen
+            pdf.set_x(10)
             
         else:
-            # ---> STANDARD-TEXT
-            # Leere Zeilen überspringen wir nicht komplett, damit Absätze bleiben
+            # Normaler Text
             if clean_line.strip() == "":
                 pdf.ln(2)
             else:
@@ -80,7 +73,7 @@ def create_pdf(text):
     
     return pdf.output(dest='S').encode('latin-1')
 
-# --- 4. PDF UPLOADER (LESEN) ---
+# --- 4. PDF UPLOADER ---
 st.sidebar.header("📄 Dokument Upload")
 uploaded_file = st.sidebar.file_uploader("Lade hier deinen Bericht hoch:", type="pdf")
 
@@ -94,37 +87,40 @@ if uploaded_file is not None:
     except Exception as e:
         st.sidebar.error(f"Fehler beim Lesen des PDFs: {e}")
 
-# --- 5. SYSTEM PROMPT (Der "Gehirn"-Teil) ---
+# --- 5. SYSTEM PROMPT (ANGEMPASST AN DEIN BILD) ---
 SYSTEM_PROMPT = """
-Du bist ein Experte für industrielle Problemlösungsmethoden (z.B. 8D, UPS, Six Sigma).
-Du befindest dich in Schritt 5: "Standardize & Reapply" (Standardisieren & Übertragen).
+Du bist ein Experte für industrielle Problemlösung (A3-Methode).
+Du befindest dich in Schritt 5: "Standardize & Reapply".
 
 Deine Aufgabe:
-Nimm die gelösten Probleme (aus Texteingabe oder PDF) entgegen und bereite die Standardisierung vor.
+Erstelle basierend auf dem gelösten Problem einen Inhalt für das "A3-Summary Sheet".
 
-WICHTIG FÜR DIE ANALYSE:
-Prüfe, ob die Vorarbeit sauber geleistet wurde. Benenne die Methoden explizit:
+Strukturiere deine Antwort EXAKT nach diesen 5 Überschriften (Achte auf die Nummerierung!):
 
-1.  Nenne die Problembeschreibung ausdrücklich "Ergebnis der Problem Investigation (6W-2H)".
-2.  Nenne die Ursache ausdrücklich "Ergebnis der Root Cause Analysis (5-Why)".
+1. Understand the situation
+   - Fasse die "Problem Investigation" (6W-2H) kurz zusammen.
+   - Bewerte den Business Impact (Kosten, Qualität, Sicherheit).
 
-Strukturiere deine Antwort exakt so:
+2. Root Cause Investigation
+   - Nenne die identifizierte "True Cause" (aus der 5-Why Analyse).
+   - Erkläre kurz, warum das Problem nicht früher entdeckt wurde ("Why it passed").
 
-TEIL 1: QUALITÄTS-CHECK DER VORARBEIT
-* **Problem Investigation (6W-2H):** Fasse das Problem kurz zusammen. Ist es präzise beschrieben?
-* **Root Cause Analysis (5-Why):** Wurde die wahre Ursache gefunden?
-* **Lösung & Verifikation:** Ist die Lösung nachhaltig?
+3. Countermeasures
+   - Beschreibe die Lösung, die implementiert wurde.
+   - Erwähne technische Details (Teilenummern, IP-Schutzklassen etc.).
 
-TEIL 2: STANDARDISIERUNG (SOPs & Dokumente)
-* Erstelle einen Entwurf für eine Standard-Arbeitsanweisung (SOP) oder A3-Report.
-* Welche Dokumente müssen angepasst werden? (Wartungspläne, FMEA).
+4. Sustain Results
+   - Beschreibe, wie die Lösung standardisiert wird (SOPs, Wartungspläne).
+   - Welche Dokumente müssen aktualisiert werden? (FMEA, Control Plan).
 
-TEIL 3: REAPPLICATION MATRIX (Wissenstransfer)
-* **Copy Exact:** Wo kann diese Lösung 1:1 übernommen werden?
-* **Copy with Change:** Wo ist das Prinzip übertragbar?
+5. Reapplication and Next steps
+   - Copy Exact: Wo kann die Lösung 1:1 übernommen werden?
+   - Reapplication at other lines: Wo ist das Prinzip übertragbar?
 
-Sei präzise, methodisch stark und lösungsorientiert.
-WICHTIG: Verzichte auf Emojis in der Ausgabe, damit das PDF sauber generiert werden kann.
+WICHTIG:
+- Sei präzise und technisch.
+- Verzichte auf Emojis, damit das PDF sauber generiert werden kann.
+- Nutze Spiegelstriche für Listen.
 """
 
 # --- 6. VERBINDUNG HERSTELLEN & CHAT ---
@@ -132,7 +128,7 @@ if api_key:
     try:
         genai.configure(api_key=api_key)
         
-        # Modell-Check
+        # Modell-Wahl
         verfuegbare_modelle = []
         for m in genai.list_models():
             if 'generateContent' in m.supported_generation_methods:
@@ -144,57 +140,48 @@ if api_key:
         
         model = genai.GenerativeModel(modell_name)
 
-        # Chat-History initialisieren
         if "messages" not in st.session_state:
             st.session_state.messages = []
             st.session_state.chat = model.start_chat(history=[
                 {"role": "user", "parts": ["Instruktion: " + SYSTEM_PROMPT]},
-                {"role": "model", "parts": ["Verstanden. Ich erstelle Analysen für SOPs und Reapplication ohne Emojis."]}
+                {"role": "model", "parts": ["Verstanden. Ich erstelle das A3-Summary nach den 5 Phasen."]}
             ])
 
-        # Alte Nachrichten anzeigen
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
-        # --- LOGIK: ENTWEDER PDF ANALYSIEREN ODER CHAT ---
+        # --- INPUT LOGIK ---
         user_input = None
         display_text = None
         
-        # Button für PDF-Analyse (nur wenn PDF da ist)
         if pdf_text and st.sidebar.button("PDF Analysieren"):
-            user_input = f"Hier ist der Inhalt eines hochgeladenen PDF-Reports. Analysiere ihn:\n\n{pdf_text}"
+            user_input = f"Analysiere diesen Report für das A3 Sheet:\n\n{pdf_text}"
             display_text = "📂 *PDF-Analyse gestartet...*"
         
-        # Normales Chat-Eingabefeld
         elif prompt := st.chat_input("Beschreibe dein Problem..."):
             user_input = prompt
             display_text = prompt
 
-        # Wenn eine Eingabe vorliegt (egal ob PDF oder Text)
         if user_input and display_text:
-            # 1. User Nachricht anzeigen
             st.session_state.messages.append({"role": "user", "content": display_text})
             with st.chat_message("user"):
                 st.markdown(display_text)
 
-            # 2. KI Fragen
             try:
                 response = st.session_state.chat.send_message(user_input)
                 bot_text = response.text
                 
-                # 3. KI Antwort anzeigen
                 st.session_state.messages.append({"role": "assistant", "content": bot_text})
                 with st.chat_message("assistant"):
                     st.markdown(bot_text)
                     
-                    # --- PDF DOWNLOAD BUTTON ---
                     st.markdown("---")
                     pdf_data = create_pdf(bot_text)
                     st.download_button(
-                        label="📥 Ergebnis als PDF herunterladen",
+                        label="📥 A3-Sheet als PDF herunterladen",
                         data=pdf_data,
-                        file_name="UPS_Schritt5_Report.pdf",
+                        file_name="A3_Summary_Result.pdf",
                         mime="application/pdf"
                     )
 
@@ -202,6 +189,3 @@ if api_key:
                 st.error(f"Fehler: {e}")
 
     except Exception as e:
-        st.error(f"Verbindungsfehler: {e}")
-else:
-    st.info("⬅️ Bitte gib links deinen API Key ein.")
